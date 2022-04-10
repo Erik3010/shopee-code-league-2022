@@ -11,15 +11,7 @@ const solution = (array) => {
     [-1, 0],
   ];
 
-  const getAvailableRoute = ({ y, x }) => {
-    const validRoutes = ([dirY, dirX]) =>
-      dirY >= 0 && dirX >= 0 && dirY < board.length && dirX < board[0].length;
-
-    return directions
-      .map(([dirY, dirX]) => [y + dirY, x + dirX])
-      .filter(validRoutes);
-  };
-
+  const destination = { y: y - 1, x: x - 1 };
   const queue = [{ y: 0, x: 0 }];
   const stack = [];
   const visited = Array.from({ length: board.length }, (e) =>
@@ -37,16 +29,23 @@ const solution = (array) => {
     )
   );
 
+  const getAvailableRoute = ({ y, x }) => {
+    const validRoutes = ([dirY, dirX]) =>
+      dirY >= 0 && dirX >= 0 && dirY < board.length && dirX < board[0].length;
+
+    return directions
+      .map(([dirY, dirX]) => [y + dirY, x + dirX])
+      .filter(validRoutes);
+  };
+
   while (queue.length) {
     const { y: curY, x: curX } = queue.shift();
     visited[curY][curX] = true;
 
-    if (curY === y - 1 && curX === x - 1) break;
+    if (curY === destination.y && curX === destination.x) break;
 
-    for (const [routeY, routeX] of getAvailableRoute({
-      y: curY,
-      x: curX,
-    })) {
+    const routes = getAvailableRoute({ y: curY, x: curX });
+    for (const [routeY, routeX] of routes) {
       if (visited[routeY][routeX]) continue;
 
       stack.push({
@@ -59,8 +58,8 @@ const solution = (array) => {
 
       if (!board[curY][curX]) continue;
 
-      const curBlackHole = blackHoles[board[curY][curX]];
-      for (const { y: blackHoleY, x: blackHoleX } of curBlackHole) {
+      const blackHole = blackHoles[board[curY][curX]];
+      for (const { y: blackHoleY, x: blackHoleX } of blackHole) {
         if (visited[blackHoleY][blackHoleX]) continue;
 
         stack.push({
@@ -75,13 +74,12 @@ const solution = (array) => {
   }
 
   const buildPath = () => {
-    const to = [y - 1, x - 1];
     const path = [];
 
-    let from = to;
+    let from = [destination.y, destination.x];
     while (from) {
       const parent = stack.find(
-        ({ from: _, value }) => value?.toString() === from?.toString()
+        ({ from: _, value }) => value.toString() === from.toString()
       );
 
       parent &&
